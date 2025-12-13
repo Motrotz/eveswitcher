@@ -1,0 +1,39 @@
+app-id: io.github.motrotz.eveswitcher
+runtime: org.gnome.Platform
+runtime-version: '48'
+sdk: org.gnome.Sdk
+command: eveswitcher
+
+finish-args:
+  # X11 access for window management
+  - --share=ipc
+  - --socket=x11
+  # Access to user config directory
+  - --filesystem=~/.config/eveswitcher:create
+  # System tray / AppIndicator support
+  - --talk-name=org.kde.StatusNotifierWatcher
+  - --talk-name=org.freedesktop.Notifications
+  # Allow running host commands (for opening config in editor)
+  - --talk-name=org.freedesktop.Flatpak
+
+build-options:
+  build-args:
+    - --share=network
+
+modules:
+  # AppIndicator support from flathub shared-modules (includes intltool, dbus-glib, libdbusmenu, libindicator)
+  - shared-modules/libappindicator/libappindicator-gtk3-introspection-12.10.json
+
+  - name: eveswitcher
+    buildsystem: simple
+    build-commands:
+      - pip3 install --prefix=${FLATPAK_DEST} python-xlib pystray Pillow
+      - pip3 install --prefix=${FLATPAK_DEST} --no-deps .
+      - install -Dm644 assets/icon.png ${FLATPAK_DEST}/share/icons/hicolor/64x64/apps/io.github.motrotz.eveswitcher.png
+      - install -Dm644 assets/icon_active.png ${FLATPAK_DEST}/share/icons/hicolor/64x64/apps/icon_active.png
+      - install -Dm644 assets/icon_inactive.png ${FLATPAK_DEST}/share/icons/hicolor/64x64/apps/icon_inactive.png
+      - install -Dm644 assets/io.github.motrotz.eveswitcher.desktop ${FLATPAK_DEST}/share/applications/io.github.motrotz.eveswitcher.desktop
+      - install -Dm644 io.github.motrotz.eveswitcher.metainfo.xml ${FLATPAK_DEST}/share/metainfo/io.github.motrotz.eveswitcher.metainfo.xml
+    sources:
+      - type: dir
+        path: ..

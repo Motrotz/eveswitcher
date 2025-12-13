@@ -1,0 +1,23 @@
+{
+    "EveSwitcher": "v1",
+    "defaultState": "active",
+    "toggleStateKey": "Ctrl+e",
+    "CharacterSelection": {
+        "includeLauncher":true,
+        "cycle_next": "ctrl + F13",
+        "cycle_prev": "ctrl + F14"
+    },
+    "default": {
+        "autoAdd": true,
+        "cycle_next": "F13",
+        "cycle_prev": "F14",
+        "characters": [
+            "Character One",
+            "CyberKiller1337"
+        ],
+        "excludeCharacters": [
+
+            "MrSpyMaster42"
+        ]
+    }
+}

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.motrotz.eveswitcher</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>WTFPL</project_license>
+  <name>EVE Switcher</name>
+  <summary>Keyboard-driven window switcher for EVE Online</summary>
+
+  <description>
+    <p>
+      EVE Switcher is a fast, keyboard-driven window switcher designed specifically for EVE Online
+      players running multiple clients on Linux. Use configurable global hotkeys to instantly cycle
+      between your characters without clicking or Alt-Tabbing.
+    </p>
+    <p>Features:</p>
+    <ul>
+      <li>Global hotkeys work from inside EVE - no clicking required</li>
+      <li>Multiple cycle groups to organize characters by activity</li>
+      <li>Automatic character discovery - new characters are added to configured groups</li>
+      <li>Separate hotkeys for character selection screens</li>
+      <li>Persistent configuration - character order is saved</li>
+      <li>System tray integration with quick access menu</li>
+      <li>Quick toggle to temporarily disable hotkeys without closing the app</li>
+    </ul>
+  </description>
+
+  <launchable type="desktop-id">io.github.motrotz.eveswitcher.desktop</launchable>
+
+  <url type="homepage">https://github.com/motrotz/eveswitcher</url>
+  <url type="bugtracker">https://github.com/motrotz/eveswitcher/issues</url>
+
+  <developer id="io.github.motrotz">
+    <name>motrotz</name>
+  </developer>
+
+  <content_rating type="oars-1.1" />
+
+  <releases>
+    <release version="1.0.0" date="2025-12-13">
+      <description>
+        <p>Initial release with Flatpak packaging</p>
+        <ul>
+          <li>System tray icon with menu</li>
+          <li>Multiple named cycle groups</li>
+          <li>Auto-discovery of new characters</li>
+          <li>Persistent configuration</li>
+          <li>Active/inactive toggle from system tray</li>
+        </ul>
+      </description>
+    </release>
+  </releases>
+
+  <keywords>
+    <keyword>eve</keyword>
+    <keyword>online</keyword>
+    <keyword>window</keyword>
+    <keyword>switcher</keyword>
+    <keyword>hotkey</keyword>
+    <keyword>multibox</keyword>
+  </keywords>
+
+  <categories>
+    <category>Game</category>
+    <category>Utility</category>
+  </categories>
+
+  <requires>
+    <display_length compare="ge">768</display_length>
+  </requires>
+
+  <supports>
+    <control>keyboard</control>
+    <control>pointing</control>
+  </supports>
+</component>

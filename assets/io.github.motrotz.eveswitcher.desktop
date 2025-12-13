@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=EVE Switcher
+GenericName=Window Switcher
+Comment=Keyboard-driven window switcher for EVE Online
+Exec=eveswitcher
+Icon=io.github.motrotz.eveswitcher
+Terminal=false
+Categories=Game;Utility;
+Keywords=eve;online;window;switcher;hotkey;multibox;gaming;
+StartupNotify=false
