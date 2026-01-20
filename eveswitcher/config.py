@@ -19,6 +19,7 @@ DEFAULT_CONFIG = {
         "autoAdd": True,
         "cycle_next": "F13",
         "cycle_prev": "F14",
+        "minimizeOnSwitch": False,
         "characters": [],
         "excludeCharacters": []
     }
@@ -74,6 +75,7 @@ class Group:
     key_prev: tuple[int, int] | None  # (keycode, modifier_mask) or None if disabled
     characters: list[str] = field(default_factory=list)
     exclude_characters: list[str] = field(default_factory=list)
+    minimize_on_switch: bool = False
     window_ids: list[int] = field(default_factory=list)
     current_idx: int = 0
 
@@ -150,6 +152,7 @@ def load_config(config_path: str, key_to_keycode) -> Config:
                 key_prev=key_to_keycode(key_prev_name) if key_prev_name else None,
                 characters=value.get("characters", []),
                 exclude_characters=value.get("excludeCharacters", []),
+                minimize_on_switch=value.get("minimizeOnSwitch", False),
             )
             groups.append(group)
 
