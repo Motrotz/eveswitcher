@@ -161,22 +161,55 @@ class X11Connection:
         """Activate (focus and raise) a window. Returns the window title."""
         try:
             win = self.disp.create_resource_object('window', wid)
-            win.set_input_focus(X.RevertToParent, X.CurrentTime)
-            win.configure(stack_mode=X.Above)
-            # Also use _NET_ACTIVE_WINDOW for better WM compatibility
+            
+            """Get the current active window"""
+            current_active = self.get_active_window() or 0
+            
+            timestamp = self._get_server_time()
+            
+            """The WM should handle focus, raise, and unminimize"""
+            """data[0] = source indication (2 = pager/other client)"""
+            """data[1] = timestamp"""
+            """data[2] = requestor's currently active window"""
             self.root.send_event(
                 event=display.event.ClientMessage(
                     window=win,
                     client_type=self.NET_ACTIVE_WINDOW,
-                    data=(32, [2, X.CurrentTime, 0, 0, 0])
+                    data=(32, [2, timestamp, current_active, 0, 0])
                 ),
                 event_mask=X.SubstructureRedirectMask | X.SubstructureNotifyMask
             )
+            self.disp.sync()
+            
+            win.configure(stack_mode=X.Above)
             self.disp.flush()
+            
             return self.get_window_title(wid)
         except Exception as e:
             print(f"Activate error: {e}")
             return ""
+    
+    def _get_server_time(self) -> int:
+        """Get current timestamp by making a property change."""
+        try:
+            # Create a dummy atom for timestamp fetching
+            TIMESTAMP_PROP = self.disp.intern_atom('_EVE_SWITCHER_TIMESTAMP')
+            STRING = self.disp.intern_atom('STRING')
+            
+            self.root.change_property(TIMESTAMP_PROP, STRING, 8, b'x')
+            
+            self.disp.sync()
+            
+            while self.disp.pending_events():
+                event = self.disp.next_event()
+                if event.type == X.PropertyNotify and event.atom == TIMESTAMP_PROP:
+                    self.root.delete_property(TIMESTAMP_PROP)
+                    return event.time
+            
+            """Fallback: use CurrentTime"""
+            return X.CurrentTime
+        except Exception:
+            return X.CurrentTime
 
     def get_active_window(self) -> int | None:
         """Get the currently active window ID."""
@@ -189,6 +222,26 @@ class X11Connection:
         except Exception:
             pass
         return None
+
+    def minimize_window(self, wid: int) -> None:
+        """Minimize (iconify) a window."""
+        try:
+            win = self.disp.create_resource_object('window', wid)
+            
+            WM_CHANGE_STATE = self.disp.intern_atom('WM_CHANGE_STATE')
+            ICONIC_STATE = 3  # IconicState from ICCCM
+            
+            self.root.send_event(
+                event=display.event.ClientMessage(
+                    window=win,
+                    client_type=WM_CHANGE_STATE,
+                    data=(32, [ICONIC_STATE, 0, 0, 0, 0])
+                ),
+                event_mask=X.SubstructureRedirectMask | X.SubstructureNotifyMask
+            )
+            self.disp.flush()
+        except Exception as e:
+            print(f"Minimize error: {e}")
 
     def grab_keys(self, keys: list[tuple[int, int]]) -> None:
         """Grab global hotkeys on the root window.

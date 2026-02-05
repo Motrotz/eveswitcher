@@ -112,9 +112,22 @@ class GroupManager:
             print(f"No windows in group '{group.name}'")
             return
 
+        """Get the current window"""
+        prev_wid = group.window_ids[group.current_idx]
+        
         group.current_idx = (group.current_idx + delta) % len(group.window_ids)
         wid = group.window_ids[group.current_idx]
+        
+        """Don't do anything if we're switching to the same window"""
+        if wid == prev_wid:
+            return
+        
         title = self.x11.activate_window(wid)
+        
+        """Minimize the previous window if enabled"""
+        if group.minimize_on_switch:
+            self.x11.minimize_window(prev_wid)
+        
         print(f"-> {title}")
 
     def cycle_char_select(self, delta: int) -> None:
