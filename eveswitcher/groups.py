@@ -106,29 +106,84 @@ class GroupManager:
         if group.window_ids:
             group.current_idx = group.current_idx % len(group.window_ids)
 
+    def _find_source_for_minimize(self, wid: int | None) -> tuple[bool, int | None]:
+        """Find if a window should be minimized based on its source group/char_select.
+
+        Only considers groups with active cycling keys (key_next or key_prev set).
+        Groups are checked in config order; first match wins.
+
+        Returns:
+            Tuple of (should_minimize, window_id) where should_minimize is True
+            if the source has minimizeOnSwitch enabled.
+        """
+        if wid is None:
+            return False, None
+
+        # Check char select first
+        if wid in self.char_select.window_ids:
+            return self.char_select.minimize_on_switch, wid
+
+        # Check groups in config order, but only those with cycling keys
+        for group in self.groups:
+            # Skip groups without cycling keys
+            if group.key_next is None and group.key_prev is None:
+                continue
+            if wid in group.window_ids:
+                return group.minimize_on_switch, wid
+
+        return False, None
+
     def cycle_group(self, group: Group, delta: int) -> None:
         """Cycle to the next/previous window in a group."""
         if not group.window_ids:
             print(f"No windows in group '{group.name}'")
             return
 
-        """Get the current window"""
+        # Get the current window
         prev_wid = group.window_ids[group.current_idx]
-        
-        group.current_idx = (group.current_idx + delta) % len(group.window_ids)
+
+        # Check if active window is in this group
+        active_wid = self.x11.get_active_window()
+        active_in_group = active_wid in group.window_ids
+
+        # Determine if we should minimize based on the SOURCE (where we're coming from)
+        should_minimize, minimize_wid = self._find_source_for_minimize(active_wid)
+
+        # Track switch type for logging
+        is_return = False
+        if not active_in_group and group.return_behavior != "cycle":
+            # Returning to EVE from another app - apply return behavior
+            is_return = True
+            if group.return_behavior == "start":
+                group.current_idx = 0
+            # "activate" keeps current_idx as-is (last active in group)
+        else:
+            # Normal cycling
+            group.current_idx = (group.current_idx + delta) % len(group.window_ids)
+
         wid = group.window_ids[group.current_idx]
-        
-        """Don't do anything if we're switching to the same window"""
-        if wid == prev_wid:
+
+        # Don't do anything if we're switching to the same window
+        if wid == prev_wid and active_in_group:
             return
-        
+
         title = self.x11.activate_window(wid)
-        
-        """Minimize the previous window if enabled"""
-        if group.minimize_on_switch:
-            self.x11.minimize_window(prev_wid)
-        
-        print(f"-> {title}")
+
+        # Minimize the previous window based on SOURCE group's setting
+        did_minimize = False
+        if should_minimize and minimize_wid is not None:
+            self.x11.minimize_window(minimize_wid)
+            did_minimize = True
+
+        # Log with direction symbol: » forward, « backward, ↩ return to last
+        if is_return:
+            direction = "↩"
+        elif delta > 0:
+            direction = "»"
+        else:
+            direction = "«"
+        minimize_indicator = " ▼" if did_minimize else ""
+        print(f"{direction} {title}{minimize_indicator}")
 
     def cycle_char_select(self, delta: int) -> None:
         """Cycle through character selection screens."""
@@ -137,10 +192,50 @@ class GroupManager:
             print("No char select windows")
             return
 
-        cs.current_idx = (cs.current_idx + delta) % len(cs.window_ids)
+        prev_wid = cs.window_ids[cs.current_idx]
+
+        # Check if active window is in char select
+        active_wid = self.x11.get_active_window()
+        active_in_cs = active_wid in cs.window_ids
+
+        # Determine if we should minimize based on the SOURCE (where we're coming from)
+        should_minimize, minimize_wid = self._find_source_for_minimize(active_wid)
+
+        # Track switch type for logging
+        is_return = False
+        if not active_in_cs and cs.return_behavior != "cycle":
+            # Returning to EVE from another app - apply return behavior
+            is_return = True
+            if cs.return_behavior == "start":
+                cs.current_idx = 0
+            # "activate" keeps current_idx as-is (last active in char select)
+        else:
+            # Normal cycling
+            cs.current_idx = (cs.current_idx + delta) % len(cs.window_ids)
+
         wid = cs.window_ids[cs.current_idx]
+
+        # Don't do anything if we're switching to the same window
+        if wid == prev_wid and active_in_cs:
+            return
+
         self.x11.activate_window(wid)
-        print(f"-> Char select")
+
+        # Minimize the previous window based on SOURCE group's setting
+        did_minimize = False
+        if should_minimize and minimize_wid is not None:
+            self.x11.minimize_window(minimize_wid)
+            did_minimize = True
+
+        # Log with direction symbol: » forward, « backward, ↩ return to last
+        if is_return:
+            direction = "↩"
+        elif delta > 0:
+            direction = "»"
+        else:
+            direction = "«"
+        minimize_indicator = " ▼" if did_minimize else ""
+        print(f"{direction} Char select{minimize_indicator}")
 
     def update_indices_from_active(self) -> None:
         """Update cycling indices based on which EVE window is currently active."""

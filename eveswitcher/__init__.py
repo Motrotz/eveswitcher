@@ -4,7 +4,7 @@ import os
 import sys
 from pathlib import Path
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 
 # Set up logging directory and redirect stderr BEFORE any GTK imports
 # This suppresses GTK warnings from the console - relevant for the PyInstaller build

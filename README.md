@@ -161,22 +161,51 @@ Create separate cycle groups for different activities:
 **CharacterSelection**
 - `cycle_next` / `cycle_prev`: Hotkeys for cycling through character selection screens
 - `includeLauncher`: If `true`, include the EVE Launcher in character selection cycling (default: `false`)
+- `minimizeOnSwitch`: If `true`, minimize the previous window when switching (default: `false`)
+- `returnBehavior`: Behavior when pressing the hotkey while no char select window is active (default: `"cycle"`):
+  - `"cycle"`: Normal cycling to next/previous window
+  - `"start"`: Jump to the first window in the list
+  - `"activate"`: Return to the last active window in this group
 
-**Groups** (e.g., "mining", "pvp", "default")
+**Groups** (e.g., "mainLoop", "tradeLoop")
 - `autoAdd`: If `true`, all characters not in `excludeCharacters` are automatically added
-- `cycle_next`: Hotkey to cycle forward (optional, omit or set to `null` to disable)
-- `cycle_prev`: Hotkey to cycle backward (optional, omit or set to `null` to disable)
+- `cycle_next`: Hotkey to cycle forward (optional, omit or set to `"none"` to disable)
+- `cycle_prev`: Hotkey to cycle backward (optional, omit or set to `"none"` to disable)
+- `minimizeOnSwitch`: If `true`, minimize the previous window when switching (default: `false`)
+- `returnBehavior`: Behavior when pressing the hotkey while no EVE window from this group is active (default: `"cycle"`):
+  - `"cycle"`: Normal cycling to next/previous window
+  - `"start"`: Jump to the first window in the list
+  - `"activate"`: Return to the last active window in this group
 - `characters`: List of character names in the order you want to cycle through them
 - `excludeCharacters`: Characters to exclude from this group (only used if `autoAdd` is `true`)
 
-Groups without keybindings can be used as a "catchall" to collect character names via auto-add for easy copy/paste into other groups.
+### Groups Without Keybindings
+
+Groups without keybindings (both `cycle_next` and `cycle_prev` set to `"none"` or omitted) can be used as a "catchall" to collect character names via auto-add for easy copy/paste into other groups.
+
 ```json
 "newAlts": {
   "autoAdd": true,
-  "characters": [], // New characters will appear here after saving the config.
+  "characters": [],
   "excludeCharacters": []
 }
 ```
+
+**Important:** Groups without keybindings are ignored when determining `minimizeOnSwitch` behavior. Only groups with at least one cycling key are considered.
+
+### Minimize Behavior Across Groups
+
+When switching between groups, the `minimizeOnSwitch` setting is determined by the **source** group (where you're switching from), not the target group. This ensures consistent behavior based on your current context.
+
+**Example:** Using the example config with two groups:
+- `tradeLoop` with `minimizeOnSwitch: true`
+- `mainLoop` with `minimizeOnSwitch: false`
+
+If you're on `MrSpyMaster42` (in `tradeLoop`) and press F13 (the `mainLoop` hotkey), the `tradeLoop` window will be minimized because `tradeLoop` has minimize enabled.
+
+**Resolution for characters in multiple groups:** If a character belongs to multiple groups with keybindings, the first group in config file order determines the minimize behavior.
+
+**Known limitation:** The minimize behavior only applies when switching directly between EVE windows. If you switch from an EVE window to a non-EVE application (e.g., a browser) and then press a cycle hotkey, the previous EVE window will not be minimized. This is because the application only tracks the currently active window, not the last active EVE window.
 
 ### Supported Keys
 
@@ -260,6 +289,30 @@ This log file may contain:
 - Error messages if something goes wrong
 
 The log file grows over time and is not automatically cleared.
+
+### Understanding Log Output
+
+When running from terminal or reviewing the log file, window switches are logged with symbols indicating the action:
+
+| Symbol | Meaning |
+|--------|---------|
+| `»` | Cycled forward to next window |
+| `«` | Cycled backward to previous window |
+| `↩` | Returned to last active window (using `returnBehavior: "activate"` or `"start"`) |
+| `▼` | Previous window was minimized |
+
+**Example log output:**
+```
+» EVE - Character One          # Cycled forward
+« EVE - CyberKiller1337        # Cycled backward
+» EVE - MrSpyMaster42 ▼        # Cycled forward, minimized previous
+↩ EVE - Character One ▼        # Returned to last active, minimized previous
+```
+
+Other log entries:
+- `+ Character Name` - Window detected/added to a group
+- `- group: N window(s) closed` - Windows removed from a group
+- `+ Auto-added 'Name' to group 'X'` - Character auto-discovered
 
 ### Why this matters
 

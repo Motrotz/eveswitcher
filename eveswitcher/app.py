@@ -298,6 +298,10 @@ class EVESwitcher:
 
 
 def main():
+    # Print version on startup
+    from eveswitcher import __version__
+    print(f"EVE Switcher v{__version__}")
+
     # Log file path was set up in __init__.py (before GTK imports)
     from eveswitcher import _setup_stderr_redirect
     log_file = _setup_stderr_redirect.log_file

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "eveswitcher"
-version = "1.0.0"
+version = "1.0.1"
 description = "X11 hotkey-based window switcher for EVE Online"
 readme = "README.md"
 license = {text = "WTFPL"}

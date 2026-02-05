@@ -76,6 +76,7 @@ class Group:
     characters: list[str] = field(default_factory=list)
     exclude_characters: list[str] = field(default_factory=list)
     minimize_on_switch: bool = False
+    return_behavior: str = "cycle"  # "cycle", "start", or "activate"
     window_ids: list[int] = field(default_factory=list)
     current_idx: int = 0
 
@@ -86,6 +87,8 @@ class CharSelectConfig:
     key_next: tuple[int, int]  # (keycode, modifier_mask)
     key_prev: tuple[int, int]  # (keycode, modifier_mask)
     include_launcher: bool = False  # Whether to include EVE Launcher in char select cycling
+    minimize_on_switch: bool = False  # Whether to minimize previous window when switching
+    return_behavior: str = "cycle"  # "cycle", "start", or "activate"
     window_ids: list[int] = field(default_factory=list)
     current_idx: int = 0
 
@@ -131,10 +134,16 @@ def load_config(config_path: str, key_to_keycode) -> Config:
             # Version marker and global settings, skip
             continue
         elif key == "CharacterSelection":
+            return_behavior = value.get("returnBehavior", "cycle")
+            if return_behavior not in ("cycle", "start", "activate"):
+                print(f"Warning: Invalid returnBehavior '{return_behavior}', defaulting to 'cycle'")
+                return_behavior = "cycle"
             char_select = CharSelectConfig(
                 key_next=key_to_keycode(value["cycle_next"]),
                 key_prev=key_to_keycode(value["cycle_prev"]),
                 include_launcher=value.get("includeLauncher", False),
+                minimize_on_switch=value.get("minimizeOnSwitch", False),
+                return_behavior=return_behavior,
             )
         else:
             # It's a group - keybindings are optional
@@ -145,6 +154,10 @@ def load_config(config_path: str, key_to_keycode) -> Config:
                 key_next_name = None
             if isinstance(key_prev_name, str) and key_prev_name.lower() in ("none", "null"):
                 key_prev_name = None
+            return_behavior = value.get("returnBehavior", "cycle")
+            if return_behavior not in ("cycle", "start", "activate"):
+                print(f"Warning: Invalid returnBehavior '{return_behavior}' in group '{key}', defaulting to 'cycle'")
+                return_behavior = "cycle"
             group = Group(
                 name=key,
                 auto_add=value.get("autoAdd", False),
@@ -153,6 +166,7 @@ def load_config(config_path: str, key_to_keycode) -> Config:
                 characters=value.get("characters", []),
                 exclude_characters=value.get("excludeCharacters", []),
                 minimize_on_switch=value.get("minimizeOnSwitch", False),
+                return_behavior=return_behavior,
             )
             groups.append(group)
 
